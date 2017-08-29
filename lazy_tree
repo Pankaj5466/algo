@@ -5,17 +5,18 @@
 #define rson (x<<1 |1)
 #define mid ((l+r)/2)
 #define par (x>>1)
+//will update the child in the lazy tree, in accordance to the problem. 'mch' stands for mark child
 #define mch  if(l!=r)\
                     {\
-                    lzy[lson]+=lzy[x]; \
-                    lzy[rson]+=lzy[x];\
+                    lzy[lson]+=lzy[x]/2; \
+                    lzy[rson]+=lzy[x]/2;\
                     }
 
 
 using namespace std;
 
 const int N = 1e4 + 2;
-int t[17];
+int t[N<<2];
 int n;
 int lzy[N << 2];
 int h;
@@ -29,13 +30,14 @@ void init() {
 
 }
 
-void push_up(int x) {
-	t[x] = t[lson] + t[rson];
-}
-
 void show();
 void updateNodeIt(int x, int val);	//If you want to see the iterative version of update, it is a point value update
 int queryIT(int l, int r);	//queryIT paramertes will be [l,r). i.e, the right boundary will not be included here
+void printBoth();
+
+void push_up(int x) {
+	t[x] = t[lson] + t[rson];
+}
 
 void build(int x, int l, int r) {
 	if (l > r) return;
@@ -69,9 +71,8 @@ void update1(int x, int l, int r, int p, int b) {
 
 //It is a range update
 //will increment value in range [i,j] of array arr[]. And then will update the tree accrodingly	
-//i,j is based on 0 index as it represents the position in arr[]
-//l,r will be passed as l=0,r=n-1 ALWAYS
-//x will  be passed as 1 ALWAYS
+//i,j is based on 0 index as it represents the position w.r.t arr[]
+//AlWAYS VALE: x=1,l=0,r=n-1
 void update2(int x, int l, int r, const int i, const int j, int val) {
 	if (l > r || l > j || r < i) return;
 	if (l == r) {
@@ -98,13 +99,13 @@ int query(int x, int l, int r, const int i, const int j) {
 
 //increment the value in the range[i, j] to val
 //NOTE:- The i and j are zero index base, i.e, conside the origianl seperated array a when telling in which range you want to update the vaue
-//again x,l,r are here for helping us deciding the boundary with inital (x=1,l=0,r=n-1)
+//again x,l,r are here for helping us deciding the boundary
+//ALWAYS VALUE: (x=1,l=0,r=n-1)
 void updateRANGE_LAZY(int x, int l, int r, const int i, const int j, const int val, int lvl) {
 	if (l>r || j<l || r<i) return; //outside range
 	if (lzy[x] != 0) {//this node is marked lazy, so needs to be updated
 		t[x] = t[x] + lzy[x];
-		if (l != r) lzy[lson] += lzy[x] / 2;
-		if (l != r) lzy[rson] += lzy[x] / 2;
+		mch;
 		lzy[x] = 0;
 
 	}
@@ -121,7 +122,7 @@ void updateRANGE_LAZY(int x, int l, int r, const int i, const int j, const int v
 	updateRANGE_LAZY(lson, l, mid, i, j, val, lvl - 1);
 	updateRANGE_LAZY(rson, mid + 1, r, i, j, val, lvl - 1);
 
-	push_up(x);//parents of the current node are always up to date. It the theri children which are not up to data, and therfore are marked as lazy
+	push_up(x);//parents of the current node are always up to date. It is their children which are not up to data, and therfore are marked as lazy
 
 }
 
@@ -129,7 +130,7 @@ void updateRANGE_LAZY(int x, int l, int r, const int i, const int j, const int v
 int queryLAZY(int x, int l, int r, const int i, const int j) {
 	if (l>r || j<l || r<i) return 0; //outside range
 
-	if (lzy[x] != 0) {
+	if (lzy[x] != 0) {//this node is marked lazy, so needs to be updated
 		t[x] = t[x] + lzy[x];
 		mch;
 		lzy[x] = 0;
@@ -180,18 +181,23 @@ int main() {
 	cout << "updating in range\n";
 	int lvl = h; //root is at the highest level
 	updateRANGE_LAZY(1, 0, n - 1, 2, 7, 10, lvl);
-	show();
-	cout << endl;
-	cout << "showing lazy tree\n";
-	for (int i = 0; i <= 16; i++) cout << lzy[i] << "[" << i << "]" << "   ";
+	printBoth();
 
 
 	cout << "\ndoin query_LAZY: \t";
 	cout << queryLAZY(1, 0, n - 1, 3, 7) << endl;
 	cout << "after query showing the tree\n";
-	show(); cout << endl;
-	for (int i = 0; i <= 16; i++) cout << lzy[i] << "[" << i << "]" << "   ";
+	printBoth();
 
+	cout << "Doing query again\n";
+	cout << "query value: " << queryLAZY(1, 0, n - 1, 2, 2) << endl;
+	cout << "After query shoing the tree";
+	printBoth();
+
+	cout << "query again\n";
+	cout << queryLAZY(1, 0, n - 1, 5, 5) << endl;
+	cout << "After query shoing the tree";
+	printBoth();
 
 	cout << endl;
 
@@ -200,6 +206,13 @@ int main() {
 
 }
 
+//parts below here, CAN BE IGNORED!
+void printBoth() {
+	show();
+	cout << endl;
+	for (int i = 0; i <= 16; i++) cout << lzy[i] << "[" << i << "]" << "   ";
+	cout << endl << endl;
+}
 void updateNodeIt(int x, int val){
 
 	for (t[x = x + n] = val; x>1; x >>= 1) {
@@ -223,3 +236,5 @@ void buildIT() {
 void show() {
 	for (int i = 1; i < 2*n; i++) cout << t[i] << "[" << i << "]" << "   ";
 }
+
+//int h; h is the height of the segment tree
