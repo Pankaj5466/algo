@@ -1,0 +1,197 @@
+#include<iostream>
+#include<math.h>
+#include<cstring>
+#define lson (x<<1)
+#define rson (x<<1 |1)
+#define mid ((l+r)/2)
+#define par (x>>1)
+#define mch  if(l!=r)\
+                    {\
+                    lzy[lson]+=lzy[x]; \
+                    lzy[rson]+=lzy[x];\
+                    }
+
+
+using namespace std;
+
+const int N = 1e4 + 2;
+int t[N << 2];
+int a[N],n, z;
+int lzy[N<<2];
+int h;
+
+void init() {
+
+	memset(t, 0, sizeof(t));
+	memset(lzy,0,sizeof(lzy));
+	memset(a, 0, sizeof(a));
+	z = 0;
+	h=log2(n&-n) + 1;
+	cout<<"Initilizatiion done!\n";
+
+}
+
+void push_up(int x) {
+	t[x] = t[lson] + t[rson];
+}
+void show();
+void build(int x, int l, int r) {
+	if (l == r) {
+		t[x] = a[z++];
+		return;
+	}
+
+	build(lson, l, mid);
+	build(rson, mid + 1, r);
+
+	push_up(x);
+}
+
+void updateNode(int x, int l, int r, int p, int b) {
+	if (l == p && p == r){
+        t[x] = b;
+        return;
+	}
+
+	if (p <= mid) updateNode(lson, l, mid, p, b);
+	else updateNode(rson, mid + 1, r, p, b);
+
+	push_up(x);
+}
+
+void updateNodeIt(int x, int val){
+
+    for(t[x=x+n]=val;x>1;x>>=1){
+        push_up(par);  //update the parent
+    }
+}
+//query(1,0,n-1,i,j) find the query for range [i,j]
+int queryREC(int x, int l, int r, int i, int j) {
+	if( l> r ||l > j ||r<i) return 0;
+	if(l>=i && r<=j) return t[x]; //within range
+
+	return queryREC(lson,l,mid, i,j)
+            + queryREC(rson,mid+1 ,r, i ,j);
+}
+
+//queryIT paramertes will be [l,r). i.e, the right boundary will not be included here
+int queryIT(int l, int r){
+    int res=0;
+    for(l+=n,r+=n;l<r;l>>=1,r>>=1){
+        if(l&1) res+=t[l++];
+        if(r&1) res+=t[--r];
+
+    }
+    return res;
+}
+
+//increment the value 
+in the range [i,j] to val
+//again x,l,r are here for helping us deciding the boundary with inital (x=1,l=0,r=n-1)
+void updateRANGE_LAZY(int x, int l, int r, const int i,const int j, const int val,int lvl){
+    if(l>r || j<l || r<i) return; //outside range
+    if(lzy[x] != 0){//this node is marked lazy, so needs to be updated
+        t[x]=t[x] + lzy[x];
+        if(l!=r) lzy[lson]+=lzy[x]/2;
+        if(l!=r) lzy[rson]+=lzy[x]/2;
+        lzy[x]=0;
+
+    }
+
+    if(i<=l && r<=j){//within range
+
+        t[x]+=val*lvl;
+        if(l!=r) lzy[lson]+=val*(lvl-1);
+        if(l!=r) lzy[rson]+=val*(lvl-1);
+
+        return;
+    }
+
+    updateRANGE_LAZY(lson,l,mid,i,j,val,lvl-1);
+    updateRANGE_LAZY(rson,mid+1,r,i,j,val,lvl-1);
+
+    push_up(x);//parents of the current node are always up to date. It the theri children which are not up to data, and therfore are marked as lazy
+
+}
+
+int queryLAZY(int x, int l, int r, const int i,  const int j){
+        if(l>r || j<l || r<i) return 0; //outside range
+
+        if(lzy[x] != 0){
+            t[x]=t[x]+lzy[x];
+            mch;
+            lzy[x]=0;
+        }
+
+        if(i<=l && r<=j) return t[x];//within range
+
+        return queryLAZY(lson,l,mid,i,j)
+                + queryLAZY(rson,mid+1,r,i,j);
+}
+
+void show() {
+	for (int i = 0;i <= 16;i++) cout << t[i] << "["<<i<<"]"<<"   ";
+}
+int main() {
+	//freopen("input1.txt", "r+", stdin);
+	freopen("output1.txt","rw+",stdout);
+
+	//cin >> n;
+	n=8;
+	init();
+
+	for (int i = 0;i<n;i++) a[i]=i+1;
+
+
+	build(1, 0, n - 1);
+	cout << "building of the tree is done\n";
+	cout << "now printing\n";
+	show();
+	cout<<endl;
+/*
+	cout<<"updating a val using RECURSIVE update\n";
+	updateNode(1,0,n-1,1,12);
+	show();
+
+
+    cout<<"\n\nCalling iterative update\n";
+    updateNodeIt(1,2);
+    show();
+    cout<<endl;
+
+    cout<<"Now we are doing queryREC\n";
+    cout<<"query val: "<<queryREC(1,0,n-1,3,7)<<endl;
+
+    cout<<"Now calling queryIT\n";
+    cout<<" queryIT val: "<<queryIT(3,8)<<endl;
+*/
+	cout<<"h: "<<h<<endl;
+    cout<<"updating in range\n";
+    int lvl=h; //root is at the highest level
+    updateRANGE_LAZY(1,0,n-1,3,7,10,lvl);
+    show();
+    cout<<endl;
+    cout<<"showing lazy tree\n";
+    for (int i = 0;i <= 16;i++) cout << lzy[i] << "["<<i<<"]"<<"   ";
+
+
+    cout<<"doin query_LAZY: \t";
+    cout<<queryLAZY(1,0,n-1,3,7)<<endl;
+    cout<<"after query showing the tree\n";
+    show();cout<<endl;
+    for (int i = 0;i <= 16;i++) cout << lzy[i] << "["<<i<<"]"<<"   ";
+
+
+    cout<<endl;
+
+    cin>>n;
+
+
+}
+
+
+        //if(l!=r) lzy[lson]+=lzy[x];
+        //if(l!=r) lzy[rson]+=lzy[x];
+        //NOTE: repace mch with above code
+
+//int h;//height of segment tree
