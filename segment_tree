@@ -1,0 +1,79 @@
+#include<iostream>
+#include<cstring>
+#define lson (x<<1)
+#define rson (x<<1 |1)
+#define mid ((l+r)/2)
+using namespace std;
+
+const int N = 1e4 + 2;
+int t[N << 2];
+int a[N], z;
+void init() {
+
+	memset(t, 0, sizeof(t));
+	memset(a, 0, sizeof(a));
+	z = 0;
+	cout << "here\n";
+
+}
+
+void push_up(int x) {
+	t[x] = t[lson] + t[rson];
+}
+void show();
+void build(int x, int l, int r) {
+	//if(l==r) cin>>t[x];
+	cout << "x: l: r: z: " << x << " " << l << " " << r << " " << z << endl;
+	if (l == r) {
+		t[x] = a[z++];
+	//	cout<<"\t";
+	//	show();
+		return;
+	}
+
+	build(lson, l, mid);
+	build(rson, mid + 1, r);
+
+	push_up(x);
+}
+
+void updateNode(int x, int l, int r, int p, int b) {
+	if (l == p && p == r) a[x] = b;
+
+	if (p <= mid) updateNode(lson, l, mid, p, b);
+	else updateNode(rson, mid + 1, r, p, b);
+
+	push_up(x);
+}
+
+int query(int x, int l, int r, int L, int R) {
+	if (l <= L && r >= R) return t[x];	//inside segment
+	if (R<l || L>r) return 0; //outside segemtn
+
+	return query(lson, l, mid, L, R) + query(rson, mid + 1, r, L, R);	//THIS ONE IS MADE ONLY WHEN SEGMENT TREE REQUIRES SUM WITHIN RANGE,if the ooeratiin changes this line changes correspondingly
+}
+
+void show() {
+	for (int i = 0;i <= 16;i++) cout << t[i] << "["<<i<<"]"<<"   ";
+}
+int main() {
+	//freopen("input1.txt", "r+", stdin);
+	//freopen("output1.txt","rw+",stdout);
+	int n;
+	//cin >> n;
+	n=8;
+	init();
+
+	for (int i = 0;i<n;i++) a[i]=i+1;
+
+
+	build(1, 0, n - 1);
+	cout << "building of the tree is done\n";
+	cout << "now printing\n";
+	show();
+	cout<<endl;
+
+	cout<<"updating a val\n";
+	updateNode(1,0,n-1,1,22);
+	show();
+}
