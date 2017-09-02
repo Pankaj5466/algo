@@ -4,7 +4,6 @@
 #define lson (x<<1)
 #define rson (x<<1 |1)
 #define mid ((l+r)/2)
-#define par (x>>1)
 //will update the child in the lazy tree, in accordance to the problem. 'mch' stands for mark child
 #define mch  if(l!=r)\
                     {\
@@ -21,18 +20,19 @@ int n;
 int lzy[N << 2];
 int h;
 
+int a[N];
+
+//NOTE: variable 'n' shuould have defined prior to calling this function
 void init() {
 
 	memset(t, 0, sizeof(t));
+    memset(a,0,sizeof(a));
 	memset(lzy, 0, sizeof(lzy));
-	h = log2(n&-n) + 1;
-	cout << "Initilizatiion done!\n";
+	h = log2(n&-n) + 1; 
 
 }
 
 void show();
-void updateNodeIt(int x, int val);	//If you want to see the iterative version of update, it is a point value update
-int queryIT(int l, int r);	//queryIT paramertes will be [l,r). i.e, the right boundary will not be included here
 void printBoth();
 
 void push_up(int x) {
@@ -42,11 +42,10 @@ void push_up(int x) {
 void build(int x, int l, int r) {
 	if (l > r) return;
 
-	if (l == r) return;
-	//	if (l == r) { //case of leaf node
-	//	t[p] = arr[l];
-	// return;
-	//}							//SINCE THE DATA HAS ALREADY BEEN ADDED THIS BLOCKS OF NO USE TO US NOW
+	if (l == r) { //case of leaf node
+		t[x] = a[l];
+	return;
+	}							//SINCE THE DATA HAS ALREADY BEEN ADDED THIS BLOCKS OF NO USE TO US NOW
 
 	build(lson, l, mid);
 	build(rson, mid + 1, r);
@@ -89,6 +88,7 @@ void update2(int x, int l, int r, const int i, const int j, int val) {
 
 
 //query(1,0,n-1,i,j) find the query for range [i,j]
+//[i,j] index stands for a[] , so there indexing starts from '0'
 int query(int x, int l, int r, const int i, const int j) {
 	if (l> r || l > j || r<i) return 0;
 	if (l >= i && r <= j) return t[x]; //within range
@@ -151,7 +151,7 @@ int main() {
 	n = 8;
 	init();
 
-	for (int i = 0; i<n; i++) t[i + n] = i + 1;
+	for (int i = 0; i<n; i++) a[i] = i + 1;
 
 
 	build(1, 0, n - 1);
@@ -191,19 +191,13 @@ int main() {
 
 	cout << "Doing query again\n";
 	cout << "query value: " << queryLAZY(1, 0, n - 1, 2, 2) << endl;
-	cout << "After query shoing the tree";
+	cout << "After query shoing the tree\n";
 	printBoth();
 
 	cout << "query again\n";
 	cout << queryLAZY(1, 0, n - 1, 5, 5) << endl;
-	cout << "After query shoing the tree";
+	cout << "After query shoing the tree\n";
 	printBoth();
-
-	cout << endl;
-
-	cin >> n;
-
-
 }
 
 //parts below here, CAN BE IGNORED!
@@ -212,26 +206,6 @@ void printBoth() {
 	cout << endl;
 	for (int i = 0; i <= 16; i++) cout << lzy[i] << "[" << i << "]" << "   ";
 	cout << endl << endl;
-}
-void updateNodeIt(int x, int val){
-
-	for (t[x = x + n] = val; x>1; x >>= 1) {
-		push_up(par);  //update the parent
-	}
-}
-
-int queryIT(int l, int r) {
-	int res = 0;
-	for (l += n, r += n; l<r; l >>= 1, r >>= 1) {
-		if (l & 1) res += t[l++];
-		if (r & 1) res += t[--r];
-
-	}
-	return res;
-}
-
-void buildIT() {
-	for (int i = n - 1; i > 0; i--) push_up(i);
 }
 void show() {
 	for (int i = 1; i < 2*n; i++) cout << t[i] << "[" << i << "]" << "   ";
